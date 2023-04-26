@@ -1,24 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import Home from "./Componets/Home";
+import Login from "./Componets/Login";
+import Navbar from "./Componets/Navbar";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Register from "./Componets/Register";
+import { useEffect, useState } from "react";
+import { auth } from "./Firebase";
 
 function App() {
+  // const auth = getAuth();
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user.uid);
+      } else {
+        setUser(null);
+      }
+    });
+  }, [user]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route exact path="/" element={<Home />} />
+        <Route exact path="/register" element={<Register uid={user} />} />
+        <Route exact path="/login" element={<Login uid={user} />} />
+      </Routes>
+    </Router>
   );
 }
 
