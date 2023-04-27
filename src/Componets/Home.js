@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import firebase, { db } from "../Firebase";
-import { getDatabase, ref, set } from "firebase/database";
-import { doc, deleteDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, deleteDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Transition } from "react-transition-group";
 import Modal from "@mui/joy/Modal";
@@ -42,7 +41,7 @@ export default function Home() {
       });
     setAuthicatedUser(localStorage.getItem("email"));
   };
-  const deleteuser = async (item) => {
+  const deleteuser = async () => {
     setIsShow(true);
     try {
       const user = auth.currentUser;
@@ -139,7 +138,7 @@ export default function Home() {
                     <span className="ps-2">
                       <i
                         className="fa-regular fa-trash-can text-[#ff0505] cursor-pointer"
-                        onClick={() => deleteuser(item)}
+                        onClick={() => deleteuser()}
                       ></i>
                     </span>
                   </li>
