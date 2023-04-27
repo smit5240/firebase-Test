@@ -1,7 +1,5 @@
 import { signInWithEmailAndPassword } from "@firebase/auth";
-import { signInAnonymously } from "@firebase/auth";
 import React, { useEffect, useState } from "react";
-import firebase from "../Firebase";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -25,32 +23,22 @@ export default function Login(props) {
     const { email, password } = user;
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        firebase
-          .firestore()
-          .collection("USERS")
-          .doc()
-          .get()
-          .then((res) => {
-            let key = userCredential.user.uid;
-            let token = userCredential._tokenResponse.idToken;
-            localStorage.setItem("token", token);
-            localStorage.setItem("uid", key);
-            setIsmessage("Login SuucessFull");
-            setUser({
-              email: "",
-              password: "",
-            });
-            window.alert("Login sucessfull");
-            navigate("/");
-            setIsshow(true);
-            setTimeout(() => {
-              setIsshow(false);
-            }, 3000);
-          })
-          .catch((error) => {
-            window.alert(error);
-          });
-        const user = userCredential.user;
+        localStorage.setItem("email", userCredential.user.email);
+        let key = userCredential.user.uid;
+        let token = userCredential._tokenResponse.idToken;
+        localStorage.setItem("token", token);
+        localStorage.setItem("uid", key);
+        setIsmessage("Login SuucessFull");
+        setUser({
+          email: "",
+          password: "",
+        });
+        window.alert("Login sucessfull");
+        navigate("/");
+        setIsshow(true);
+        setTimeout(() => {
+          setIsshow(false);
+        }, 3000);
       })
       .catch((error) => {
         window.alert(error);
@@ -78,9 +66,9 @@ export default function Login(props) {
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                fill-rule="evenodd"
+                fillRule="evenodd"
                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
+                clipRule="evenodd"
               ></path>
             </svg>
             <span className="sr-only">Check icon</span>
@@ -110,7 +98,7 @@ export default function Login(props) {
             >
               <div>
                 <label
-                  for="email"
+                  htmlFor="email"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   email
@@ -128,7 +116,7 @@ export default function Login(props) {
               </div>
               <div>
                 <label
-                  for="password"
+                  htmlFor="password"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Password
@@ -156,7 +144,7 @@ export default function Login(props) {
                 </div>
                 <div className="ml-3 text-sm">
                   <label
-                    for="terms"
+                    htmlFor="terms"
                     className="font-light text-gray-500 dark:text-gray-300"
                   >
                     I accept the{" "}

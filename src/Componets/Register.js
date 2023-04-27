@@ -25,43 +25,48 @@ export default function Register(props) {
   const submitdata = async (e) => {
     e.preventDefault();
     const { name, email, password, address } = user;
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        firebase
-          .firestore()
-          .collection("USERS")
-          .doc()
-          .set(
-            {
-              user: {
-                name: name,
-                email: email,
-                address: address,
+    if (name && email && password && address) {
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          firebase
+            .firestore()
+            .collection("USERS")
+            .doc(userCredential.user.uid)
+            .set(
+              {
+                user: {
+                  name: name,
+                  email: email,
+                  address: address,
+                },
               },
-            },
-            { merge: true }
-          )
-          .then((res) => {
-            setIsshow(true);
-            navigate("/login");
-            setTimeout(() => {
-              setIsshow(false);
-            }, 3000);
-          })
-          .catch((error) => {
-            window.alert(error);
-          });
-      })
-      .catch((error) => {
-        window.alert(error);
-      });
+              { merge: true }
+            )
+            .then((res) => {
+              setIsshow(true);
+              window.alert("Sign-up Successfull");
+              navigate("/login");
+              setTimeout(() => {
+                setIsshow(false);
+              }, 3000);
+            })
+            .catch((error) => {
+              window.alert(error);
+            });
+        })
+        .catch((error) => {
+          window.alert(error);
+        });
 
-    setUser({
-      name: "",
-      email: "",
-      password: "",
-      address: "",
-    });
+      setUser({
+        name: "",
+        email: "",
+        password: "",
+        address: "",
+      });
+    } else {
+      window.alert("Fill all property");
+    }
   };
   return (
     <section className=" md:mx-[10%] ">
@@ -80,9 +85,9 @@ export default function Register(props) {
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                fill-rule="evenodd"
+                fillRule="evenodd"
                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
+                clipRule="evenodd"
               ></path>
             </svg>
             <span className="sr-only">Check icon</span>
@@ -107,7 +112,7 @@ export default function Register(props) {
             <form className="space-y-4 md:space-y-6">
               <div>
                 <label
-                  for="confirm-password"
+                  htmlFor="confirm-password"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Name
@@ -125,7 +130,7 @@ export default function Register(props) {
               </div>
               <div>
                 <label
-                  for="email"
+                  htmlFor="email"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Your email
@@ -143,7 +148,7 @@ export default function Register(props) {
               </div>
               <div>
                 <label
-                  for="password"
+                  htmlFor="password"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Password
@@ -161,7 +166,7 @@ export default function Register(props) {
               </div>
               <div>
                 <label
-                  for="confirm-password"
+                  htmlFor="confirm-password"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Address
@@ -177,22 +182,23 @@ export default function Register(props) {
                   required=""
                 />
               </div>
-
               <button
                 onClick={(e) => submitdata(e)}
-                className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm   text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 Create an account
               </button>
-              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Already have an account?{" "}
-                <a
-                  href="/login"
-                  className="font-medium text-primary-600 hover:underline dark:text-primary-500"
-                >
-                  Login here
-                </a>
-              </p>
+              <div className="flex justify-center m-0 p-0">
+                <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                  Already have an account?{" "}
+                  <a
+                    href="/login"
+                    className="font-medium text-primary-600 hover:underline dark:text-primary-500"
+                  >
+                    Login here
+                  </a>
+                </p>
+              </div>
             </form>
           </div>
         </div>

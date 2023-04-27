@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from "react";
 import firebase, { db } from "../Firebase";
 import { getDatabase, ref, set } from "firebase/database";
-import { doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { doc, deleteDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Transition } from "react-transition-group";
 import Modal from "@mui/joy/Modal";
 import ModalDialog from "@mui/joy/ModalDialog";
 import Typography from "@mui/joy/Typography";
 import Spinner from "./Spinner";
+import { getAuth } from "firebase/auth";
 export default function Home() {
   const [userdata, setUserdata] = useState([]);
   const [open, setOpen] = React.useState(false);
   const [user, setUser] = useState([]);
-  const [userid, setUserid] = useState([]);
+  const [authicatedUser, setAuthicatedUser] = useState("");
   const [isShow, setIsShow] = useState(false);
-  const [isShowdata, setIsShowdata] = useState(true);
   const navigate = useNavigate();
+  const auth = getAuth();
   useEffect(() => {
     setIsShow(true);
-    setIsShowdata(false);
     getdata();
     let token = localStorage.getItem("token");
     if (!token) {
@@ -39,75 +39,61 @@ export default function Home() {
         });
         setUserdata(temp);
         setIsShow(false);
-        setIsShowdata(true);
       });
+    setAuthicatedUser(localStorage.getItem("email"));
   };
-
   const deleteuser = async (item) => {
     setIsShow(true);
-    setIsShowdata(false);
-    await firebase
-      .firestore()
-      .collection("USERS")
-      .where("user.email", "==", item.email)
-      .get(1)
-      .then((que) => {
-        que.forEach((data) => {
-          data.data();
-          setUserid(data.id);
-        });
-      })
-      .catch((err) => {
-        window.alert(err);
-      });
-    await deleteDoc(doc(db, "USERS", userid))
-      .then((res) => {
-        getdata();
-      })
-      .catch((error) => {
-        window.alert(error);
-      });
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        user
+          .delete()
+          .then(async () => {
+            await deleteDoc(doc(db, "USERS", localStorage.getItem("uid")))
+              .then((res) => {
+                getdata();
+              })
+              .catch((error) => {
+                window.alert(error);
+              });
+          })
+          .catch((error) => {
+            window.alert(error);
+          });
+      }
+    } catch (error) {}
   };
-
   const updateuser = async (e) => {
     e.preventDefault();
+    setOpen(false);
     const { name, email, address } = user;
-    const db = getDatabase();
-    const doc = set(ref(db, "USERS/" + userid), {
-      name: name,
-      email: email,
-      address: address,
-    })
-      .then((res) => {
-        console.log("res --->", res);
-      })
-      .catch((error) => {
-        console.log("error --->", error);
-      });
-    console.log("Doc --->", doc);
+    firebase
+      .firestore()
+      .collection("USERS")
+      .doc(localStorage.getItem("uid"))
+      .set(
+        {
+          user: {
+            name: name,
+            email: email,
+            address: address,
+          },
+        },
+        { merge: true }
+      );
+    getdata();
   };
-
   const handlechange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
-
   const openmodel = async (item) => {
-    setUser({ name: "", email: "", address: "" });
     setOpen(true);
-    await firebase
-      .firestore()
-      .collection("USERS")
-      .where("user.email", "==", item.email)
-      .get(1)
-      .then((que) => {
-        que.docs.forEach((data) => {
-          data.data();
-          setUserid(data.id);
-        });
-      })
-      .catch((err) => {
-        console.log("Error ------>", err);
-      });
+    setUser({
+      name: item.name,
+      email: item.email,
+      address: item.address,
+    });
   };
 
   return (
@@ -130,7 +116,10 @@ export default function Home() {
         {userdata &&
           userdata.map((item, i) => {
             return (
-              <ul className="grid grid-cols-12 bg-[#1e2a42] text-[#fff]">
+              <ul
+                className="grid grid-cols-12 bg-[#1e2a42] text-[#fff]"
+                key={i}
+              >
                 <li className="col-span-1 flex justify-center  p-3">{i + 1}</li>
                 <li className="col-span-3 flex justify-center  p-3">
                   {item?.name}
@@ -141,22 +130,25 @@ export default function Home() {
                 <li className="col-span-3 flex justify-center  p-3">
                   {item?.address}
                 </li>
-                <li className="col-span-1 flex justify-center items-center font-[700] p-2">
-                  <i
-                    className="fa-regular fa-pen-to-square pe-2 text-[#0558ff] cursor-pointer"
-                    onClick={() => openmodel(item)}
-                  ></i>
-                  <span className="ps-2">
+                {authicatedUser === item.email && (
+                  <li className="col-span-1 flex justify-center items-center font-[700] p-2">
                     <i
-                      className="fa-regular fa-trash-can text-[#ff0505] cursor-pointer"
-                      onClick={() => deleteuser(item)}
+                      className="fa-regular fa-pen-to-square pe-2 text-[#0558ff] cursor-pointer"
+                      onClick={() => openmodel(item)}
                     ></i>
-                  </span>
-                </li>
+                    <span className="ps-2">
+                      <i
+                        className="fa-regular fa-trash-can text-[#ff0505] cursor-pointer"
+                        onClick={() => deleteuser(item)}
+                      ></i>
+                    </span>
+                  </li>
+                )}
               </ul>
             );
           })}
       </div>
+
       <React.Fragment>
         <Transition in={open} timeout={400}>
           {(state) => (
@@ -208,7 +200,7 @@ export default function Home() {
                         <form className="space-y-4 md:space-y-6">
                           <div>
                             <label
-                              for="confirm-password"
+                              htmlFor="confirm-password"
                               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                             >
                               Name
@@ -216,7 +208,7 @@ export default function Home() {
                             <input
                               type="text"
                               name="name"
-                              value={user.name}
+                              value={user?.name}
                               onChange={handlechange}
                               id="name"
                               placeholder=""
@@ -226,25 +218,7 @@ export default function Home() {
                           </div>
                           <div>
                             <label
-                              for="email"
-                              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                            >
-                              Your email
-                            </label>
-                            <input
-                              type="email"
-                              name="email"
-                              value={user.email}
-                              onChange={handlechange}
-                              id="email"
-                              className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder=""
-                              required=""
-                            />
-                          </div>
-                          <div>
-                            <label
-                              for="confirm-password"
+                              htmlFor="confirm-password"
                               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                             >
                               Address
@@ -252,7 +226,7 @@ export default function Home() {
                             <input
                               type="text"
                               name="address"
-                              value={user.address}
+                              value={user?.address}
                               onChange={handlechange}
                               id="confirm-password"
                               placeholder=""
@@ -260,12 +234,11 @@ export default function Home() {
                               required=""
                             />
                           </div>
-
                           <button
                             onClick={(e) => updateuser(e)}
                             className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                           >
-                            Update Data
+                            Update
                           </button>
                         </form>
                       </div>

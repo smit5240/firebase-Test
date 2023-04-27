@@ -7,5 +7,5 @@ import "firebase/compat/firestore";
 const app = firebase.initializeApp(config);
 export const db = firebase.firestore();
 export const auth = getAuth();
-export const nauth = firebase.auth();
+// export const nauth = firebase.auth();
 export default firebase;
